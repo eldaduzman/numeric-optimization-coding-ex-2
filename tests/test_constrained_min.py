@@ -22,6 +22,10 @@ def make_objective_figure(df: pd.DataFrame, title: str):
     return fig
 
 
+import numpy as np
+import matplotlib.ticker as mticker  # <-- add this
+
+
 def draw_3d_path_figure(df: pd.DataFrame, title: str = "Central path"):
     """
     Feasible triangle (x+y+z=1, x,y,z≥0) + central-path points in 3-D.
@@ -33,18 +37,18 @@ def draw_3d_path_figure(df: pd.DataFrame, title: str = "Central path"):
     # triangle
     verts = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
     ax.add_collection3d(
-        Poly3DCollection([verts], alpha=0.25, facecolor="tab:blue", edgecolor="k")
+        Poly3DCollection([verts], alpha=0.5, facecolor="tab:gray", edgecolor="black")
     )
 
     # central path
-    ax.plot(df["x1"], df["x2"], df["f_x"], "-o", lw=1.5, ms=5, label="central path")
+    ax.plot(df["x1"], df["x2"], df["x3"], "-o", lw=1.5, ms=5, label="Path")
     ax.plot(
         df["x1"].iloc[-1],
         df["x2"].iloc[-1],
-        df["f_x"].iloc[-1],
-        "r*",
-        ms=12,
-        label="final sol.",
+        df["x3"].iloc[-1],
+        "*",
+        ms=15,
+        label="Minimum",
     )
 
     ax.set_xlabel("x")
@@ -52,6 +56,17 @@ def draw_3d_path_figure(df: pd.DataFrame, title: str = "Central path"):
     ax.set_zlabel("z")
     ax.set_title(title)
     ax.legend()
+
+    # ---- tighter tick spacing ----
+    tick_vals = np.arange(0, 1.01, 0.1)  # 0.0, 0.1, … , 1.0
+    ax.set_xticks(tick_vals)
+    ax.set_yticks(tick_vals)
+    ax.set_zticks(tick_vals)
+
+    # (equivalently, use a locator)
+    # for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
+    #     axis.set_major_locator(mticker.MultipleLocator(0.1))
+
     return fig
 
 
@@ -98,7 +113,7 @@ class TestInteriorPoint(TestCase):
     _figures = []
 
     def test_qp(self):
-        f_obj, g_list, A, b, x0 = examples.get_quadratic_probel()
+        f_obj, g_list, A, b, x0 = examples.get_quadratic_problem_params()
         sol, trace = interior_pt(f_obj, g_list, A, b, x0, verbose=False)
 
         df = pd.DataFrame(trace)
@@ -115,13 +130,14 @@ class TestInteriorPoint(TestCase):
         final_g = np.array([g(sol)[0] for g in g_list])
         final_h = (A @ sol - b) if A.size else np.array([])
         print(
-            f"\n[QP]  f(x*) = {final_f:.6f},  "
+            f"\n[QP]  x* = {sol},  ",
+            f"f(x*) = {final_f:.6f},  "
             f"max g_i(x*) = {final_g.max():.2e},  "
-            f"|Ax-b| = {np.linalg.norm(final_h):.2e}"
+            f"|Ax-b| = {np.linalg.norm(final_h):.2e}",
         )
 
     def test_lp(self):
-        f_obj, g_list, A, b, x0 = examples.get_linear_problem()
+        f_obj, g_list, A, b, x0 = examples.get_linear_problem_params()
         sol, trace = interior_pt(f_obj, g_list, A, b, x0, verbose=False)
 
         df = pd.DataFrame(trace)
@@ -130,7 +146,6 @@ class TestInteriorPoint(TestCase):
                 df, g_list, title="LP - feasible region & central path"
             )
         )
-
         self._figures.append(
             make_objective_figure(df, title="LP - objective vs outer iteration")
         )
@@ -139,9 +154,10 @@ class TestInteriorPoint(TestCase):
         final_g = np.array([g(sol)[0] for g in g_list])
         final_h = (A @ sol - b) if A.size else np.array([])
         print(
-            f"\n[LP]  f(x*) = {final_f:.6f},  "
+            f"\n[LP]  x* = {sol},  ",
+            f"f(x*) = {final_f:.6f},  "
             f"max g_i(x*) = {final_g.max():.2e},  "
-            f"|Ax-b| = {np.linalg.norm(final_h):.2e}"
+            f"|Ax-b| = {np.linalg.norm(final_h):.2e}",
         )
 
     @classmethod

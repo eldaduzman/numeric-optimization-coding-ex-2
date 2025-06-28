@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_quadratic_probel():
+def get_quadratic_problem_params():
 
     def f_obj(x, hessian_flag: bool = True):
         x_, y_, z_ = x
@@ -35,11 +35,12 @@ def get_quadratic_probel():
     A_eq = np.array([[1.0, 1.0, 1.0]])
     b_eq = np.array([1.0])
 
-    x0 = np.array([0.3, 0.3, 0.4])
+    # x0 = np.array([0.3, 0.3, 0.4])
+    x0 = np.array([0.2, 0.1, 0.7])
     return f_obj, ineq_constraints, A_eq, b_eq, x0
 
 
-def get_linear_problem():
+def get_linear_problem_params():
 
     def f_obj(x, hessian_flag: bool = True):
 

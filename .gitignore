@@ -226,3 +226,4 @@ $RECYCLE.BIN/
 EX02_programming.pdf
 .vscode/
 src/draft.py
+*.docx

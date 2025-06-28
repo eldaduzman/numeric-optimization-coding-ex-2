@@ -155,7 +155,7 @@ def interior_pt(
     param_tol: float = 1e-8,
     outer_tol: float = 1e-12,
     max_outer_steps: int = 50,
-    max_inner_steps: int = 100,
+    max_inner_steps: int = 10000,
     verbose: bool = True,
 ):
 
@@ -173,7 +173,12 @@ def interior_pt(
     t = t0
     trace = []
     for outer in range(max_outer_steps):
-
+        try:
+            trace.append(
+                {"x1": x[0], "x2": x[1], "x3": x[2], "f_x": func(x)[0], "t": t}
+            )
+        except IndexError:
+            trace.append({"x1": x[0], "x2": x[1], "f_x": func(x)[0], "t": t})
         if verbose:
             print(f"\n── Barrier outer step {outer}  (t = {t:.3e}) ──")
 
@@ -194,7 +199,7 @@ def interior_pt(
         )
         if not success:
             raise RuntimeError("Inner Newton failed to converge.")
-        trace.append({"x1": x[0], "x2": x[1], "f_x": func(x)[0], "t": t})
+
         if m_ineq == 0 or m_ineq / t < outer_tol:
             if verbose:
                 print("Duality gap small enough – terminating.")
